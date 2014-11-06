@@ -827,5 +827,4 @@ LYT.player =
 
     log.message "Player: updateHtml: rendering segment #{segment.url()}, start #{segment.start}, end #{segment.end}"
     LYT.render.textContent segment
-    unless @playClickHook
-      segment.preloadNext()
+    segment.preloadNext()
