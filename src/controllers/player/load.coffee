@@ -19,9 +19,15 @@ class LYT.player.command.load extends LYT.player.command
   load: ->
     if ++@loadAttemptCount <= 5 # FIXME: configurable defaults
       @el.jPlayer 'setMedia', {mp3: @src}
-      @el.jPlayer 'load'
+
+      # Using jPlayer's play function rather than load, because load will only
+      # have effect the first time it's called on the audio element
+      @el.jPlayer 'play'
     else
       # Give up - we pretend that we have got the duration
+
+      # Since we used play rather than load, call pause before resolving
+      @el.jPlayer 'pause'
       @resolve()
 
   handles: ->
@@ -40,6 +46,9 @@ class LYT.player.command.load extends LYT.player.command
         if status.duration is 0 or isNaN status.duration
           @load()
         else
+          # Since we used play rather than load, call pause before resolving
+          @el.jPlayer 'pause'
+
           @resolve status
       else
         @reject() # This load command has been superseded by another
