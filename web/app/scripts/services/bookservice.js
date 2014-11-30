@@ -54,15 +54,15 @@ angular.module('lyt3App')
           }
 
           NativeGlue.play( currentBook.id, offset );
-          BookService.playing = true;
         } else if ( currentBook && currentBook.id === bookId ) {
           if ( offset === undefined ) {
             offset = getCurrentPOsition( );
           }
 
           NativeGlue.play( bookId, offset );
-          BookService.playing = true;
         } else {
+          $log.info( 'BookService: play: loadBook', bookId, offset );
+
           BookService.loadBook( bookId )
             .then( function( book ) {
               BookService.currentBook = book;
@@ -72,7 +72,6 @@ angular.module('lyt3App')
               }
 
               NativeGlue.play( bookId, offset );
-              BookService.playing = true;
             } );
         }
       },
@@ -98,6 +97,8 @@ angular.module('lyt3App')
       },
 
       cacheBook: function( bookId ) {
+        $log.info( 'BookService: cacheBook', bookId );
+
         var cachedBook = NativeGlue.getBooks( )
           .filter( function( bookData ) {
             return bookData.id === bookId;
@@ -106,10 +107,23 @@ angular.module('lyt3App')
         if ( cachedBook ) {
           NativeGlue.cacheBook( '' + bookId );
         } else {
+          $log.info( 'BookService: cacheBook: not set yet', bookId );
+
           BookService.loadBook( bookId )
             .then( function( ) {
-              BookService.cacheBook( bookId );
+              NativeGlue.cacheBook( '' + bookId );
             } );
+        }
+      },
+
+      cancelBookCaching: function( bookId ) {
+        var cachedBook = NativeGlue.getBooks( )
+          .filter( function( bookData ) {
+            return bookData.id === bookId;
+          } ).pop();
+
+        if ( cachedBook ) {
+          NativeGlue.cancelBookCaching( '' + bookId );
         }
       },
 
@@ -166,7 +180,10 @@ angular.module('lyt3App')
         if ( $location.path( ).indexOf( 'book-player' ) > -1 ) {
           var bookPath = '/book-player/' + bookId;
           $location.path( bookPath );
+          BookService.playing = true;
+          $log.info( 'BookService: play-time-update: location is book-player but different', bookId, offset );
         } else {
+          $log.info( 'BookService: play-time-update: location different from book-player', bookId, offset );
           BookService.loadBook( bookId )
             .then( function( book ) {
               book.currentPosition = offset;
