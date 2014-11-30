@@ -9,14 +9,15 @@ angular.module( 'lyt3App' )
         // Resolve images
         return source.find( '*[data-src]' )
           .each( function( index, item ) {
-            var url;
             item = jQuery( item );
             if ( item.data( 'resolved' ) ) {
               return;
             }
-            url = item.attr( 'data-src' )
+
+            var url = item.attr( 'data-src' )
               .replace( /^\//, '' );
             var newUrl = resources[ url ].url;
+
             item.data( 'resolved', 'yes' );
             if ( isCartoon ) {
               item.attr( 'src', newUrl.url );
@@ -28,9 +29,22 @@ angular.module( 'lyt3App' )
           } );
       };
 
+      // Private method for checking if a book is a cartoon.
+      // A cartoon is a TextContentDocument there all pages have a single image.
+      var isCartoon = function( source ) {
+        var pages = source.find( '.page' ).toArray( );
+        return pages.length !== 0 && pages.every( function( page ) {
+          return $( page )
+            .children( 'img' )
+            .length === 1;
+        } );
+      };
+
+      // Public prototype function:
       function TextContentDocument( url, resources, callback ) {
         DtbDocument.call( this, url, function( ) {
           resolveURLs( this.source, resources, this.isCartoon( ) );
+
           if ( typeof callback === 'function' ) {
             return callback( );
           }
@@ -40,16 +54,10 @@ angular.module( 'lyt3App' )
       TextContentDocument.prototype = Object.create( DtbDocument.prototype );
 
       TextContentDocument.prototype.isCartoon = function( ) {
-        var pages;
         if ( this._isCartoon === undefined ) {
-          pages = this.source.find( '.page' )
-            .toArray( );
-          this._isCartoon = pages.length !== 0 && pages.every( function( page ) {
-            return $( page )
-              .children( 'img' )
-              .length === 1;
-          } );
+          this._isCartoon = isCartoon( this.source );
         }
+
         return this._isCartoon;
       };
 

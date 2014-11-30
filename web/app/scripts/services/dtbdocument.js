@@ -65,8 +65,7 @@ angular.module( 'lyt3App' )
 
       var createHTMLDocument = ( function( ) {
         var doctype;
-        if ( document.implementation && typeof document.implementation.createHTMLDocument ===
-          'function' ) {
+        if ( document.implementation && typeof document.implementation.createHTMLDocument === 'function' ) {
           return function( ) {
             return document.implementation.createHTMLDocument( '' );
           };
@@ -74,8 +73,7 @@ angular.module( 'lyt3App' )
 
         // Firefox does not support `document.implementation.createHTMLDocument()`
         // The following work-around is adapted from [this gist](http://gist.github.com/49453)
-        if ( typeof XSLTProcessor !== 'undefined' && XSLTProcessor !==
-          null ) {
+        if ( typeof XSLTProcessor !== 'undefined' && XSLTProcessor !== null ) {
           return function( ) {
             var doc, error, html, processor, range, template;
             processor = new XSLTProcessor( );
@@ -87,13 +85,11 @@ angular.module( 'lyt3App' )
               '</xsl:template>' +
               '</xsl:stylesheet>';
 
-            doc = document.implementation.createDocument( '', 'foo',
-              null );
+            doc = document.implementation.createDocument( '', 'foo', null );
             range = doc.createRange( );
             range.selectNodeContents( doc.documentElement );
             try {
-              doc.documentElement.appendChild( range.createContextualFragment(
-                template ) );
+              doc.documentElement.appendChild( range.createContextualFragment( template ) );
             } catch ( _error ) {
               error = _error;
               return null;
@@ -105,14 +101,12 @@ angular.module( 'lyt3App' )
             }
             return html;
           };
-        } else if ( document.implementation && typeof document.implementation
-          .createDocumentType === 'function' ) {
+        } else if ( document.implementation && typeof document.implementation.createDocumentType === 'function' ) {
           doctype = document.implementation.createDocumentType( 'HTML',
             '-//W3C//DTD HTML 4.01//EN',
             'http://www.w3.org/TR/html4/strict.dtd' );
           return function( ) {
-            return document.implementation.createDocument( '', 'HTML',
-              doctype );
+            return document.implementation.createDocument( '', 'HTML', doctype );
           };
           // Internet Explorer 8 does not have a document.implementation.createHTMLDocument
           // We bypass this by extracting the document from an invisible iframe.
