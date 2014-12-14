@@ -447,6 +447,17 @@ angular.module( 'lyt3App' )
 
             url = target.attr( 'href' );
             scope.$emit( 'player-skip-segment', url );
+          } else if ( $event.type === 'dblclick' && target.is('p[id]') ) {
+            var targetId = target.attr('id');
+            var segment = scope.BookService.currentSegment.document.segments
+              .filter( function( segment ) {
+                return segment.contentId === targetId;
+              } ).pop( );
+
+            if ( segment ) {
+              url = scope.BookService.currentSegment.document.filename + '#' + segment.id;
+              scope.$emit( 'player-skip-segment', url );
+            }
           }
         };
       }
