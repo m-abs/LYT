@@ -40,7 +40,7 @@ angular.module('lyt3App')
           $log.info( 'BookService: set currentBook:', book.id );
           currentBook = book;
           currentSegment = undefined;
-          findCurrentSegment( currentBook.currentPosition );
+          findCurrentSegment( book.id, currentBook.currentPosition );
 
           NativeGlue.setBook( book.structure );
         }
@@ -235,6 +235,15 @@ angular.module('lyt3App')
       if ( currentBook && currentBook.id === bookId ) {
         BookService.playing = false;
         currentBook.currentPosition = currentBook.duration;
+      }
+    } );
+
+    $rootScope.$on( 'player-skip-segment', function( $currentScope, url ) {
+      if ( currentBook ) {
+        currentBook.segmentByURL( url )
+          .then( function( segment ) {
+            BookService.play( null, segment.absoluteOffset );
+          } );
       }
     } );
 

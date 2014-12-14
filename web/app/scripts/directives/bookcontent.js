@@ -441,11 +441,12 @@ angular.module( 'lyt3App' )
 
         scope.gotoSegment = function( $event ) {
           var target = angular.element( $event.target );
+          var url;
           if ( target.is( 'a[href]:not(.external)' ) ) {
             $event.preventDefault( );
 
-            var url = target.attr( 'href' );
-            scope.$emit( 'player-ship-segment', url );
+            url = target.attr( 'href' );
+            scope.$emit( 'player-skip-segment', url );
           }
         };
       }
