@@ -202,7 +202,7 @@ angular.module( 'lyt3App' )
 
                 if ( nextSection ) {
                   return nextSection.firstSegment( )
-                    .promise.then( function( next ) {
+                    .then( function( next ) {
                       return next.preloadNext( preloadCount - 1 );
                     } );
                 }

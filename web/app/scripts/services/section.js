@@ -99,7 +99,7 @@ angular.module( 'lyt3App' )
     var getSegment = function( section, getter ) {
       var deferred = $q.defer( );
 
-      this.load( )
+      section.load( )
         .catch( function( error ) {
           deferred.reject( error );
         } )
