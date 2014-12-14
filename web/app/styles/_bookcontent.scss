@@ -1,0 +1,11 @@
+@import "compass/css3/border-radius";
+
+bookcontent {
+  #book-context-content {
+    .active {
+      background-color: #2a6496;
+      color: white;
+      @include border-radius(2px);
+    }
+  }
+}

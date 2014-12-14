@@ -21,6 +21,8 @@ angular.module('lyt3App')
       return currentBook.currentPosition;
     };
 
+    var currentSegment;
+
     $interval( function( ) {
       if ( currentBook ) {
         currentBook.setLastmark( );
@@ -37,6 +39,8 @@ angular.module('lyt3App')
         if ( !currentBook || currentBook.id !== book.id ) {
           $log.info( 'BookService: set currentBook:', book.id );
           currentBook = book;
+          currentSegment = undefined;
+          findCurrentSegment( currentBook.currentPosition );
 
           NativeGlue.setBook( book.structure );
         }
@@ -172,7 +176,29 @@ angular.module('lyt3App')
         return deferred.promise;
       },
 
-      playing: false
+      playing: false,
+
+      get currentSegment() {
+        return currentSegment;
+      }
+    };
+
+    var lastOffset;
+    var findCurrentSegment = function( bookId, offset ) {
+      if ( currentBook && currentBook.id === bookId && ( !currentSegment || !currentSegment.containsAbsoluteOffset(offset) ) ) {
+        lastOffset = offset;
+        BookService.currentBook.findSegmentFromOffset( offset )
+          .then( function( segment ) {
+            segment.load()
+              .then( function( ) {
+                if ( currentBook && currentBook.id === bookId && lastOffset === offset ) {
+                  currentSegment = segment;
+                }
+
+                segment.preloadNext( );
+              } );
+          } );
+      }
     };
 
     $rootScope.$on( 'play-time-update', function( $currentScope, bookId, offset ) {
@@ -182,17 +208,20 @@ angular.module('lyt3App')
           $location.path( bookPath );
           BookService.playing = true;
           $log.info( 'BookService: play-time-update: location is book-player but different', bookId, offset );
+          findCurrentSegment( bookId, offset );
         } else {
           $log.info( 'BookService: play-time-update: location different from book-player', bookId, offset );
           BookService.loadBook( bookId )
             .then( function( book ) {
               book.currentPosition = offset;
               BookService.playing = true;
+              findCurrentSegment( bookId, offset );
             } );
         }
       } else {
         currentBook.currentPosition = offset;
         BookService.playing = true;
+        findCurrentSegment( bookId, offset );
       }
     } );
 

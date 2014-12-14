@@ -2,7 +2,7 @@
 'use strict';
 
 angular.module( 'lyt3App' )
-  .directive( 'bookcontent', [ '$window', '$log', function( $window, $log ) {
+  .directive( 'bookcontent', [ '$window', '$log', 'ScrollTo', function( $window, $log, ScrollTo ) {
     var _focusEasing = 'easeInOutQuint';
     var _focusDuration = 500;
 
@@ -260,9 +260,7 @@ angular.module( 'lyt3App' )
       if ( el.length ) {
         prevActive = el.addClass( 'active' );
         if ( view.is( ':visible' ) ) {
-          view.scrollTo( el, 100, {
-            offset: -10
-          } );
+          ScrollTo.idOrName( segment.contentId );
         } else {
           $log.info( 'Render: segmentIntoView: while view isn\'t visible' );
         }
@@ -303,7 +301,7 @@ angular.module( 'lyt3App' )
 
     // Context viewer - Shows the entire DOM of the content document and
     // scrolls around when appropriate
-    var renderContext = function( segment, view ) {
+    var renderContext = function( scope, segment, view ) {
       var scrollHandler;
       var book      = segment.document.book;
       var html      = book.resources[segment.contentUrl].document;
@@ -369,37 +367,18 @@ angular.module( 'lyt3App' )
       // TODO: LYT.render.setStyle( );
       segmentIntoView( view, segment );
 
-      if ( angular.isFucntion( scrollHandler ) ) {
+      if ( angular.isFunction( scrollHandler ) ) {
         scrollHandler( ); // Show initially visible images
       }
 
       // Catch links
       view.find( 'a[href]' ).each( function( ) {
         var link = $( this );
-        var url = this.getAttribute( 'href' );
+        var url = link.attr( 'href' );
         var external = /^https?:\/\//i.test( url );
         if ( external ) {
           link.addClass( 'external' );
         }
-
-        return link.click( function( e ) {
-          e.preventDefault( );
-
-          if ( external ) {
-            window.open( url, '_blank' ); // Open external URLs
-          }
-          /*
-          } else {
-            segment = LYT.player.book.segmentByURL( url );
-            segment.finally( ( function( _this ) {
-              return function( segment ) {
-                return LYT.player.navigate( segment );
-              };
-            } )( this ) );
-            segment.catch( function( ) {} );
-          }
-          */
-        } );
       } );
     };
 
@@ -436,7 +415,7 @@ angular.module( 'lyt3App' )
           }
           default: {
             requestAnimationFrame( function( ) {
-              renderContext( segment, selectView( scope, element, 'context' ), renderDelta );
+              renderContext( scope, segment, selectView( scope, element, 'context' ), renderDelta );
             } );
           }
         }
@@ -448,16 +427,27 @@ angular.module( 'lyt3App' )
     };
 
     return {
-      templateURL: 'views/bookcontent.html',
+      templateUrl: 'views/bookcontent.html',
       restrict: 'E',
       link: function( scope, element ) {
+        element = element.children('#book-content');
         scope.$on( 'play-end', function( ) {
           renderText( scope, element, 'The end of the book' );
         } );
 
-        scope.watch( 'BookService.currentSegment', function( segment ) {
+        scope.$watch( 'BookService.currentSegment', function( segment ) {
           renderSegment( scope, element, segment );
         } );
+
+        scope.gotoSegment = function( $event ) {
+          var target = angular.element( $event.target );
+          if ( target.is( 'a[href]:not(.external)' ) ) {
+            $event.preventDefault( );
+
+            var url = target.attr( 'href' );
+            scope.$emit( 'player-ship-segment', url );
+          }
+        };
       }
     };
   } ] );

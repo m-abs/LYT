@@ -28,43 +28,41 @@ angular.module('lyt3App')
       } );
 
 
-      var currentSMIL;
+      $scope.$watch( 'BookService.currentSegment', function( segment ) {
+        if ( !BookService.currentBook || !segment ) {
+          return;
+        }
+
+        var smil = segment.document;
+        $scope.startTime = smil.absoluteOffset.toFixed(0);
+        $scope.endTime   = ( smil.absoluteOffset + smil.duration ).toFixed(0);
+        $scope.duration  = smil.duration;
+      } );
+
       $scope.$watch( 'BookService.currentBook.currentPosition', function( offset ) {
         if ( !BookService.currentBook ) {
           return;
         }
 
-        BookService.currentBook.findSegmentFromOffset( offset )
-          .then( function( segment ) {
-            var smil = segment.document;
-            var navigationItem = BookService.currentBook.structure.navigation
-              .reduce( function( output, current ) {
-                if ( current.offset <= offset ) {
-                  output = current;
-                }
-                return output;
-              }, {} );
-
-            if ( currentSMIL !== smil ) {
-              currentSMIL = smil;
-
-              $scope.startTime = ( currentSMIL.absoluteOffset ).toFixed(0);
-              $scope.endTime   = ( currentSMIL.absoluteOffset + currentSMIL.duration ).toFixed(0);
-              $scope.duration  = currentSMIL.duration;
+        var navigationItem = BookService.currentBook.structure.navigation
+          .reduce( function( output, current ) {
+            if ( current.offset <= offset ) {
+              output = current;
             }
+            return output;
+          }, {} );
 
-            $scope.currentTime = offset.toFixed(2);
-            if ( offset.toFixed(0) === $scope.endTime ) {
-              // Since currentTime is rounded to two decimals and endTime is rounded to one,
-              // currentTime could be at the end of the segment but be shown as less than the entime.
-              $scope.currentTime = $scope.endTime;
-            }
+        $scope.currentTime = offset.toFixed(2);
+        if ( offset.toFixed(0) === $scope.endTime ) {
+          // Since currentTime is rounded to two decimals and endTime is rounded to one,
+          // currentTime could be at the end of the segment but be shown as less than the entime.
+          $scope.currentTime = $scope.endTime;
+        }
 
-            $scope.percentTime = ( $scope.currentTime - $scope.startTime ) / $scope.duration * 100;
-            if ( navigationItem ) {
-              $scope.sectionTitle = navigationItem.title;
-            }
-          } );
+        $scope.percentTime = ( $scope.currentTime - $scope.startTime ) / $scope.duration * 100;
+        if ( navigationItem ) {
+          $scope.sectionTitle = navigationItem.title;
+        }
       } );
 
       $scope.toogle = function( ) {

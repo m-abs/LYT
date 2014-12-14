@@ -68,6 +68,10 @@ angular.module( 'lyt3App' )
         // Will be initialized in the load() method:
         this.text = null;
         this.smil = data.smil;
+
+        var contentUrlData = this.data.text.src.split( '#' );
+        this.contentUrl    = contentUrlData[ 0 ];
+        this.contentId     = contentUrlData[ 1 ];
       }
 
       // Loads all resources
@@ -94,9 +98,6 @@ angular.module( 'lyt3App' )
         $log.log( 'Segment: loading ' + url );
 
         // Parse transcript content
-        var _ref = this.data.text.src.split( '#' );
-        this.contentUrl = _ref[ 0 ];
-        this.contentId = _ref[ 1 ];
         var resources = this.document.book.resources;
         var resource = resources[ this.contentUrl.toLowerCase( ) ];
         if ( !resource ) {
@@ -189,7 +190,7 @@ angular.module( 'lyt3App' )
           return;
         }
 
-        return this.promise
+        return this.loadingPromise
           .then( function( segment ) {
             var next = segment.next;
             if ( next ) {

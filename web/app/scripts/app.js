@@ -18,6 +18,7 @@ angular
     'ngTouch',
     'xml',
     'LocalStorageModule',
+    'ngScrollTo',
   ] )
   .config( function( $routeProvider ) {
     $routeProvider
