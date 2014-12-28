@@ -96,6 +96,120 @@
         window.localStorage.setItem( 'lydbridge:' + key, JSON.stringify( obj ) );
       };
 
+      var currentBook;
+
+      var audioHandler = ( function( ) {
+          var audio = document.createElement( 'AUDIO' );
+          var $audio = $( audio );
+          var currentPlaylistItem;
+          $audio
+            .on( 'timeupdate', function( ) {
+              if ( audio.paused ) {
+                console.log( 'lytBrige: timeupdate: audio is paused, do nothing' );
+                return;
+              }
+
+              if ( !currentBook ) {
+                console.log( 'lytBrige: timeupdate: no currentBook' );
+                audioHandler.stop( );
+                return;
+              }
+
+              var bookId = currentBook.id;
+
+              if ( !booksOffset[ bookId ] ) {
+                booksOffset[ bookId ] = 0;
+              }
+
+              if ( !currentPlaylistItem ) {
+                console.log( 'lytBrige: timeupdate: no currentPlaylistItem' );
+
+                audioHandler.stop( );
+                return;
+              }
+
+              var offset = currentPlaylistItem.bookOffset + audio.currentTime -  currentPlaylistItem.start;
+              /*
+              console.log( 'lytBrige: timeupdate', {
+                bookOffset: Number(offset).toFixed(2),
+                url: audio.src,
+                currentTime: Number(audio.currentTime).toFixed(2),
+                startTime: Number(currentPlaylistItem.start).toFixed(2),
+                endTime: Number(currentPlaylistItem.end).toFixed(2),
+              } );
+              */
+
+              if ( audio.currentTime >= currentPlaylistItem.end ) {
+                var tmpItem = currentBook.playlist[ currentPlaylistItem.idx + 1 ];
+                if ( tmpItem ) {
+                  offset = tmpItem.bookOffset;
+                  console.log( 'lytBrige: timeupdate: next playlist item' );
+                  audioHandler.play( tmpItem );
+                } else {
+                  console.log( 'lytBrige: timeupdate: end of book' );
+                  offset = currentBook.duration;
+                }
+              }
+
+              booksOffset[ bookId ] = Math.min( offset, currentBook.duration );
+              window.lytHandleEvent( 'play-time-update', bookId, offset );
+              if ( booksOffset[ bookId ] >= currentBook.duration ) {
+                window.lytHandleEvent( 'play-end', bookId );
+              }
+
+              storeVar( 'booksOffset', booksOffset );
+            } )
+            .on( 'ended', function( ) {
+              if ( !currentBook ) {
+                console.log( 'lytBrige: ended: no currentBook' );
+                audioHandler.stop( );
+                return;
+              }
+
+              var bookId = currentBook.id;
+
+              if ( !booksOffset[ bookId ] ) {
+                booksOffset[ bookId ] = 0;
+              }
+
+              if ( !currentPlaylistItem ) {
+                audioHandler.stop( );
+                return;
+              }
+
+              var tmpItem = currentBook.playlist[ currentPlaylistItem.idx + 1 ];
+              if ( tmpItem ) {
+                console.log( 'lytBrige: ended: next playlist item' );
+                audioHandler.play( tmpItem );
+              } else {
+                console.log( 'lytBrige: ended: book ended' );
+                audioHandler.stop( );
+                return;
+              }
+            } );
+
+          return {
+            play: function( playlistItem, offset ) {
+              currentPlaylistItem = playlistItem;
+              audio.currentTime = offset !== undefined ? offset : playlistItem.start;
+              audio.src = playlistItem.url;
+              audio.play( );
+            },
+            stop: function( ) {
+              audio.pause();
+              window.lytHandleEvent( 'play-stop' );
+            }
+          };
+        } )( );
+
+      var getPlaylistItemFromOffset = function( offset ) {
+        if ( currentBook ) {
+          return currentBook.playlist.filter( function( item ) {
+            return item.bookOffset <= offset && offset <= ( item.bookOffset + item.end - item.start );
+          } ).pop();
+        }
+      };
+
       // Hash reference of the known books
       // id => {
       //   id: <ID>,
@@ -119,9 +233,6 @@
       // Book offset
       var booksOffset = getStoredVar( 'booksOffset' );
 
-      // used for faking playback progress
-      var playInterval;
-
       window.lytBridge = {
         // Add the bookdata
         setBook: function( bookData ) {
@@ -132,7 +243,9 @@
           bookData = JSON.parse( bookData );
           if ( bookData && bookData.id ) {
             bookData.duration = bookData.playlist
-              .reduce( function( res, item ) {
+              .reduce( function( res, item, idx ) {
+                item.bookOffset = res;
+                item.idx = idx;
                 res += ( item.end - item.start );
                 return res;
               }, 0 );
@@ -177,41 +290,19 @@
             return;
           }
 
-          clearInterval( playInterval );
+          currentBook = books[ bookId ];
 
           if ( offset === undefined ) {
             offset = booksOffset[ bookId ] || 0;
           }
 
-          var lastTime = (new Date()) / 1000.0;
-          playInterval = setInterval( function( ) {
-            if ( !books[ bookId ] ) {
-              window.lytBridge.stop( );
-              return;
-            }
-
-            if ( !booksOffset[ bookId ] ) {
-              booksOffset[ bookId ] = 0;
-            }
-
-            var curTime = (new Date()) / 1000.0;
-            var timeDiff = curTime - lastTime;
-            lastTime = curTime;
-
-            offset += timeDiff;
-            booksOffset[ bookId ] = Math.min( offset, books[ bookId ].duration );
-            window.lytHandleEvent( 'play-time-update', bookId, offset );
-            if ( booksOffset[ bookId ] >= books[ bookId ].duration ) {
-              window.lytHandleEvent( 'play-end', bookId );
-              clearInterval( playInterval );
-            }
-
-            storeVar( 'booksOffset', booksOffset );
-          }, 250 );
+          var tmpItem = getPlaylistItemFromOffset( offset );
+          if ( tmpItem ) {
+            audioHandler.play( tmpItem, offset - tmpItem.bookOffset );
+          }
         },
         stop: function() {
-          clearInterval( playInterval );
-          window.lytHandleEvent( 'play-stop' );
+          audioHandler.stop( );
         },
         cacheBook: function( bookId ) {
           if ( !cachedBooks[ bookId ] ) {

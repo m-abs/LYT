@@ -290,7 +290,7 @@ angular.module( 'lyt3App' )
         // Inclusive backwards search
         var iterator = function( ) {
           var result = current;
-          current = !current ? current.previous : void 0;
+          current = current ? current.previous : void 0;
           return result;
         };
 
