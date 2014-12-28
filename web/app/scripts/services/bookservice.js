@@ -165,6 +165,7 @@ angular.module('lyt3App')
                 .some( function( bookData ) {
                   if ( bookData.id === book.id ) {
                     book.currentPosition = Math.max( bookData.offset || 0, book.currentPosition || 0, 0 );
+                    findCurrentSegment( book.id, book.currentPosition );
                     return true;
                   }
                 } );
