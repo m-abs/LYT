@@ -1,0 +1,28 @@
+<ion-view title="Boghylde">
+  <ion-content>
+    <div class="list">
+      <a href="#/book-player/{{book.id}}" class="open-book item ng-repeat="book in books"">
+        <div class="img-box">
+          <img ng-src="http://bookcover.e17.dk/{{ book.id }}_h75.jpg" src="images/blankbookcover.png" />
+        </div>
+        <div class="book-title-box">
+          <div class="book-title">{{ book.title }}</div>
+          <div class="book-author">{{ book.author }}</div>
+        </div>
+        <div class="download-buttons-box">
+          <button class="btn glyphicon glyphicon-download" ng-show="!book.downloaded && !book.downloading" ng-click="cacheBook($event, book.id)" title="Download til offline"></button>
+    
+          <button class="btn glyphicon glyphicon-remove" ng-show="!book.downloaded && book.downloading" ng-click="cancelBookCaching($event, book.id)" title="Stop download"></button>
+    
+          <button class="btn glyphicon glyphicon-remove-circle" ng-show="book.downloaded" ng-click="clearBookCache($event, book.id)" title="Fjern fra offline brug"></button>
+        </div>
+        <div class="progress" ng-show="book.downloading !== undefined && !book.downloaded">
+          <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuenow="{{book.downloading}}" aria-valuemin="0" aria-valuemax="100" style="width: {{book.downloading}}%">
+            <span class="sr-only">{{book.downloading}}%</span>
+          </div>
+        </div>
+      </a>
+    </div>
+    <button type="button" class="btn btn-default" ng-click="nextPage()">Flere bøger</button>
+  </ion-content>
+</ion-view>

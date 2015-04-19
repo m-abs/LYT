@@ -1,0 +1,1 @@
+../../../web/app/scripts/lytbridge.js
