@@ -1,3 +1,5 @@
+'use strict';
+
 // Ionic Starter App
 
 // angular.module is a global place for creating, registering and retrieving Angular modules
@@ -28,11 +30,11 @@ angular.module('lyt3App', [
   });
 })
 .config(function($stateProvider, $urlRouterProvider) {
-  $urlRouterProvider.otherwise( '/' );
+  $urlRouterProvider.otherwise( '/bookshelf' );
 
   $stateProvider
     .state( 'bookshelf', {
-      url: '/',
+      url: '/bookshelf',
       templateUrl: 'views/bookshelf.html',
       controller: 'BookshelfCtrl'
     } );

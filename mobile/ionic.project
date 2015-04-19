@@ -1,4 +1,11 @@
 {
   "name": "mobile",
-  "app_id": ""
+  "app_id": "",
+  "proxies": [ {
+      "path": "/DodpMobile/Service.svc",
+      "proxyUrl": "http://test.m.e17.dk/DodpMobile/Service.svc"
+    }, {
+      "path": "/DodpFiles/",
+      "proxyUrl": "http://test.m.e17.dk/DodpFiles/"
+  } ]
 }
