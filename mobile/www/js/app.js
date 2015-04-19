@@ -37,5 +37,14 @@ angular.module('lyt3App', [
       url: '/bookshelf',
       templateUrl: 'views/bookshelf.html',
       controller: 'BookshelfCtrl'
+    } )
+    .state( 'book-player', {
+      url: '/book-player/:bookid',
+      views: {
+        bookPlayer: {
+          templateUrl: 'views/book-playder.html',
+          controller: 'BookPlayerCtrl'
+        }
+      }
     } );
 });
