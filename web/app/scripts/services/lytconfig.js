@@ -2,12 +2,12 @@
 
 angular.module('lyt3App')
   .value('LYTConfig', {
-      // LYT.rpc function config
-      rpc: {
+    // LYT.rpc function config
+    rpc: {
         // The service's server-side URL
         url: '/DodpMobile/Service.svc' // No default - must be present
       },
-      protocol: {
+    protocol: {
         // The reading system attrs to send with
         // the `setReadingSystemAttributes` request
         // (No default - must be present)
@@ -19,11 +19,11 @@ angular.module('lyt3App')
           config: null
         }
       },
-      dtbDocument: {
+    dtbDocument: {
         useForceClose: true,
         attempts: 3
       },
-      service: {
+    service: {
         // The number of attempts to make when logging on
         // (multiple attempts are only made if the log on
         // process fails _unexpectedly_, i.e. connection
@@ -34,7 +34,7 @@ angular.module('lyt3App')
         guestUser: 'guest',
         guestLogin: 'guest'
       },
-      segment: {
+    segment: {
         preload: {
           queueSize: 3
         },
@@ -43,13 +43,13 @@ angular.module('lyt3App')
           attempts: 5
         }
       },
-      player: {
+    player: {
         lastmarkUpdateInterval: 10000,
         playAttemptLimit: 10,
         useFakeEnd: false
       },
-      // NCCDocument config
-      nccDocument: {
+    // NCCDocument config
+    nccDocument: {
         metaSections: {
           //  Format is 'attribute value': 'attribute type'
           // 'title':             'class' # Don't skip the title and booknumber

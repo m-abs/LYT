@@ -298,7 +298,7 @@ angular.module( 'lytTest' )
       var setBookmarks = {
         params: {
           book: {
-           id: bookId,
+            id: bookId,
             title: 'Bunker 137',
             getMetadata: function( ) {
               return {

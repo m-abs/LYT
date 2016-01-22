@@ -2,7 +2,7 @@
 
 angular.module('lyt3App')
   .factory('BookService', [ '$q', '$rootScope', '$location', '$interval', '$log', 'LYTConfig', 'Book', 'BookNetwork', 'NativeGlue',
-  function( $q, $rootScope, $location, $interval, $log,  LYTConfig, Book, BookNetwork, NativeGlue ) {
+  function( $q, $rootScope, $location, $interval, $log, LYTConfig, Book, BookNetwork, NativeGlue ) {
     var currentBook;
 
     var getCurrentPOsition = function( ) {
