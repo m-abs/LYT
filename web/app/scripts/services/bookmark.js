@@ -9,7 +9,7 @@ angular.module( 'lyt3App' )
     // Caveat emptor: Since a bookmark refers to a SMIL par (or seq) element,
     // the attribute timeOffset is a SMIL offset, not an audio offset.
     function Bookmark(data) {
-      ['note', 'URI', 'timeOffset'].forEach( function( key ) {
+      ['note', 'URI', 'timeOffset', 'ncxRef'].forEach( function( key ) {
         this[key] = data[key];
       }, this );
     }

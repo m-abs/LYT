@@ -1,9 +1,54 @@
 'use strict';
 
 angular.module( 'lyt3App' )
-  .factory( 'Book', [ '$q', '$log', 'LYTUtils', 'BookNetwork', 'BookErrorCodes',
+  .factory( 'Book', [ '$q', '$log', 'LYTUtils', 'BookNetwork', 'BookErrorCodes', 'TextContentDocument',
     'NCCDocument', 'SMILDocument',
-    function( $q, $log, LYTUtils, BookNetwork, BookErrorCodes, NCCDocument, SMILDocument ) {
+    function( $q, $log, LYTUtils, BookNetwork, BookErrorCodes, NCCDocument, SMILDocument, TextContentDocument ) {
+      const getDiscInfo = (obj, resources) => {
+        const discinfo = new TextContentDocument(obj.localUri, resources);
+
+        return discinfo.then( () => {
+          const source = discinfo.source;
+          const parts = jQuery('body a', source).map(function() {
+            return {
+              name: this.textContent,
+              localUri: URI(this.getAttribute('href')).normalize().toString()
+            };
+          });
+
+          return parts.get();
+        });
+      };
+
+      // Delete all bookmarks that are very close to each other
+      var normalizeBookmarks = function( book ) {
+        var temp = {};
+        book.bookmarks.forEach( function( bookmark ) {
+          var name = bookmark.URI;
+          if ( !temp[ name ] ) {
+            temp[ name ] = [ ];
+          }
+
+          var tmpIdx = 0;
+          temp[ name ].some( function( saved, idx ) {
+            var tempOffset = saved.timeOffset - bookmark.timeOffset;
+            if ( -2 < tempOffset && tempOffset < 2 ) {
+              tmpIdx = idx;
+              return true;
+            }
+          } );
+
+          temp[ bookmark.URI ][ tmpIdx ] = bookmark;
+        } );
+
+        book.bookmarks = [];
+
+        Object.keys( temp )
+          .forEach( function( uri ) {
+            book.bookmarks = book.bookmarks.concat( temp[ uri ] );
+          } );
+      };
+
       /*
        * The constructor takes one argument; the ID of the book.
        * The instantiated object acts as a Deferred object, as the instantiation of a book
@@ -51,7 +96,7 @@ angular.module( 'lyt3App' )
       };
 
       // Load the list of resources from DODP, this is required to load any content files.
-      Book.prototype.loadResources = function( ) {
+      Book.prototype.loadResources = function(multiCallback) {
         if ( this.resourcePromise ) {
           return this.resourcePromise;
         }
@@ -61,7 +106,8 @@ angular.module( 'lyt3App' )
 
         BookNetwork.getResources( this.id )
           .then( function( resources ) {
-            var ncc = null;
+            const nccs = [];
+            let discinfo = null;
             Object.keys( resources )
               .forEach( function( localUri ) {
                 var uri = resources[ localUri ];
@@ -85,14 +131,26 @@ angular.module( 'lyt3App' )
                 };
 
                 if ( localUri.match( /^ncc\.x?html?$/i ) ) {
-                  ncc = this.resources[ localUri ];
+                  nccs.push( this.resources[ localUri ] );
+                }
+
+                if ( localUri.match( /^discinfo\.x?html?$/i ) ) {
+                  discinfo = this.resources[localUri];
                 }
               }, this );
 
-            // If the url of the resource is the NCC document,
+            // If the url of the resource is an NCC document,
             // save the resource for later
-            if ( ncc ) {
-              this.nccData = ncc;
+            if (discinfo && nccs.length > 1) {
+              getDiscInfo(discinfo, this.resources)
+                .then(multiCallback)
+                .then((part) => {
+                  // log.message 'User selected which volume to play', part
+                  this.nccData = this.resources[part.localUri];
+                  deferred.resolve( );
+                });
+            } else if ( nccs.length === 1 ) {
+              this.nccData = nccs[0];
               deferred.resolve( );
             } else {
               deferred.reject( BookErrorCodes.BOOK_NCC_NOT_FOUND_ERROR );
@@ -151,7 +209,7 @@ angular.module( 'lyt3App' )
         this.nccPromise = deferred.promise;
 
         // Instantiate an NCC document
-        var ncc = new NCCDocument( this.nccData.url, this );
+        var ncc = new NCCDocument( this.nccData.localUri, this );
         ncc.promise
           .then( function( document ) {
             this.nccData.document = this.nccDocument = document;
@@ -235,16 +293,16 @@ angular.module( 'lyt3App' )
         return this.loadAllSMILPromise;
       };
 
-      Book.prototype.getSMIL = function( url ) {
-        url = url.toLowerCase( );
+      Book.prototype.getSMIL = function( localUri ) {
+        localUri = URI(localUri).absoluteTo(this.nccDocument.localUri).toString();
         var deferred = $q.defer( );
-        if ( !( url in this.resources ) ) {
+        if ( !( localUri in this.resources ) ) {
           return deferred.reject( );
         }
 
-        var smil = this.resources[ url ];
+        var smil = this.resources[ localUri ];
         if ( !smil.document ) {
-          smil.document = new SMILDocument( smil.url, this );
+          smil.document = new SMILDocument( smil.url, this, localUri );
         }
 
         smil.document.promise
@@ -355,35 +413,6 @@ angular.module( 'lyt3App' )
         book.bookmarks = tmpBookmarks;
       };
 
-      // Delete all bookmarks that are very close to each other
-      var normalizeBookmarks = function( book ) {
-        var temp = {};
-        book.bookmarks.forEach( function( bookmark ) {
-          var name = bookmark.URI;
-          if ( !temp[ name ] ) {
-            temp[ name ] = [ ];
-          }
-
-          var tmpIdx = 0;
-          temp[ name ].some( function( saved, idx ) {
-            var tempOffset = saved.timeOffset - bookmark.timeOffset;
-            if ( -2 < tempOffset && tempOffset < 2 ) {
-              tmpIdx = idx;
-              return true;
-            }
-          } );
-
-          temp[ bookmark.URI ][ tmpIdx ] = bookmark;
-        } );
-
-        book.bookmarks = [];
-
-        Object.keys( temp )
-          .forEach( function( uri ) {
-            book.bookmarks = book.bookmarks.concat( temp[ uri ] );
-          } );
-      };
-
       // TODO: Add remove bookmark method
       Book.prototype.addBookmark = function( segment, offset ) {
         offset = Math.max( offset || 0, 0 );
@@ -398,10 +427,15 @@ angular.module( 'lyt3App' )
           text: section.title
         };
 
+        if (section.ref) {
+          bookmark.ncxRef = section.ref;
+        }
+
         // Add to bookmarks and save
         if ( !this.bookmarks ) {
           this.bookmarks = [ ];
         }
+
         this.bookmarks.push( bookmark );
         normalizeBookmarks( this );
         sortBookmarks( this );
@@ -414,7 +448,13 @@ angular.module( 'lyt3App' )
 
         this.findSegmentFromOffset( currentPosition )
           .then( function( segment ) {
+            const section = this.getSectionBySegment( segment );
+
             this.lastmark = segment.bookmark( currentPosition );
+            if (section.ref) {
+              this.lastmark.ncxRef = section.ref;
+            }
+
             this.saveBookmarks( )
               .then( function( stored ) {
                 defer.resolve( stored );
@@ -753,7 +793,7 @@ angular.module( 'lyt3App' )
       Book.load = ( function( ) {
         var loaded = {};
 
-        return function( id ) {
+        return function( id, multiCallback ) {
           var book = loaded[ id ];
           if ( !book ) {
             book = new Book( id );
@@ -768,7 +808,7 @@ angular.module( 'lyt3App' )
 
           book.issue( )
             .then( function( ) {
-              book.loadResources( )
+              book.loadResources( multiCallback )
                 .then( function( ) {
                   book.loadBookmarks( )
                     .then( function( ) {

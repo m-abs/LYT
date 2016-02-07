@@ -304,7 +304,7 @@ angular.module( 'lyt3App' )
     var renderContext = function( scope, segment, view ) {
       var scrollHandler;
       var book      = segment.document.book;
-      var html      = book.resources[segment.contentUrl].document;
+      var html      = book.resources[segment.contentUrl.toLowerCase()].document;
       var source    = html.source[0];
       var isCartoon = html.isCartoon( );
       var contentID = '' + book.id + '/' + segment.contentUrl;

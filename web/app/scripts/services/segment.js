@@ -41,13 +41,18 @@ angular.module( 'lyt3App' )
         this.start = data.start;
         this.end = data.end;
         this.canBookmark = data.canBookmark;
-        this.audio = void 0;
-        if ( data.audio && data.audio.src ) {
-          var src = data.audio.src.toLowerCase( );
-          if ( document.book.resources[ src ] ) {
-            this.audio = document.book.resources[ src ];
-          }
+
+        // If this is a audio segment, we need to find the proper localURI for the
+        // audio-clip. We do this by basing the URL on the base directory of the smil
+        const resources = document.book.resources;
+        const dirname = URI(document.localUri).directory();
+        this.audio = null;
+        if (data.audio && data.audio.src) {
+          const src = data.audio.src.toLowerCase();
+          const localUri = [dirname, src].filter((val) => !!val).join('/');
+          this.audio = resources[localUri].url;
         }
+
         this.data = data;
         this.el = data.par;
 
@@ -98,6 +103,12 @@ angular.module( 'lyt3App' )
         $log.log( 'Segment: loading ' + url );
 
         // Parse transcript content
+        // Find the localUri by adding the directory of the active ncc
+        // file to the localUri (Usually the ncc is at the root, but multivolume
+        // book will split a book up into subfolders)
+
+        this.contentUrl = URI(this.contentUrl).absoluteTo(this.document.localUri).toString();
+
         var resources = this.document.book.resources;
         var resource = resources[ this.contentUrl.toLowerCase( ) ];
         if ( !resource ) {
@@ -106,7 +117,7 @@ angular.module( 'lyt3App' )
           deferred.reject( );
         } else {
           if ( !resource.document ) {
-            resource.document = new TextContentDocument( resource.url, resources );
+            resource.document = new TextContentDocument( resource.localUri, resources );
           }
 
           resource.document.promise
@@ -122,7 +133,7 @@ angular.module( 'lyt3App' )
               var status = reason[0];
               var error = reason[1];
 
-              $log.error( 'Unable to get TextContentDocument for ' + resource.url + ': ' + status + ', ' + error );
+              $log.error( 'Unable to get TextContentDocument for ' + resource.localUri + ': ' + status + ', ' + error );
 
               deferred.reject( );
             } );
@@ -132,7 +143,7 @@ angular.module( 'lyt3App' )
       };
 
       Segment.prototype.url = function( ) {
-        return '' + this.document.filename + '#' + this.id;
+        return '' + this.document.localUri + '#' + this.id;
       };
 
       Segment.prototype.ready = false;

@@ -147,11 +147,12 @@ angular.module( 'lyt3App' )
        *        an extension of the getConsecutive procedure that does the linking
        *        handled by flattenStructure followed by linkSections.
        */
-      function NCCDocument( url, book ) {
+      function NCCDocument( localUri, book ) {
         this.getSectionByURL = this.getSectionByURL.bind( this );
-        TextContentDocument.call( this, url, book.resources, function( ) {
+        TextContentDocument.call( this, localUri, book.resources, function( ) {
           this.structure = parseStructure( this.source, book );
           this.sections = flattenStructure( this.structure );
+          this.localUri = localUri;
           linkSections( this.sections );
 
           return this.sections.map( function( section ) {
