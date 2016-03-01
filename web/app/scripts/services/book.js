@@ -715,6 +715,10 @@ angular.module( 'lyt3App' )
           // Generate the playlist, e.g. list of all audio-files and their start/end-offsets
           var loadPlaylist = this.loadAllSMIL( )
             .then( function( smildocuments ) {
+              smildocuments.sort(function(a, b) {
+                return a.absoluteOffset - b.absoluteOffset;
+              });
+
               smildocuments.forEach( function( smildocument ) {
                 smildocument.segments.forEach( function( segment ) {
                   duration += segment.duration;
