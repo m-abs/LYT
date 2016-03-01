@@ -720,7 +720,7 @@ angular.module( 'lyt3App' )
                   duration += segment.duration;
 
                   playlist.push( {
-                    url: segment.audio.url,
+                    url: segment.audio,
                     start: segment.start,
                     end: segment.end
                   } );
