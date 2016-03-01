@@ -487,6 +487,7 @@ angular.module( 'lyt3App' )
             } else {
               segment = document.segments[ 0 ];
             }
+
             if ( segment ) {
               return segment.load( )
                 .then( function( segment ) {
@@ -688,22 +689,23 @@ angular.module( 'lyt3App' )
               // We want all levels of the navigation hieraki
               return flat.concat( section.flatten( ) );
             }, [ ] ).map( function( section ) {
-              var loadSegment = $q.defer( );
-              this.segmentByURL( section.url + '#' + section.ref )
+              return this.segmentByURL( section.url + '#' + section.ref )
                 .then( function( segment ) {
-                  loadSegment.resolve( {
+                  return {
                     title: section.title,
                     offset: segment.getBookOffset( )
-                  } );
+                  };
+                }, function() {
+                  return null;
                 } );
-
-              return loadSegment.promise;
             }, this );
 
           // Once all the navigation items have been loaded, add them to bookStructure
           var loadNavigation = $q.all( promises )
             .then( function( segments ) {
-              bookStructure.navigation = segments;
+              bookStructure.navigation = segments.filter(function(segment) {
+                return !!segment;
+              });
             } );
 
           var duration = 0;
