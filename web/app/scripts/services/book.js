@@ -1,9 +1,9 @@
 'use strict';
+/*global jQuery: false */
 
 angular.module( 'lyt3App' )
-  .factory( 'Book', [ '$q', '$log', 'LYTUtils', 'BookNetwork', 'BookErrorCodes', 'TextContentDocument',
-    'NCCDocument', 'SMILDocument',
-    function( $q, $log, LYTUtils, BookNetwork, BookErrorCodes, NCCDocument, SMILDocument, TextContentDocument ) {
+  .factory( 'Book', [ '$q', '$log', 'LYTUtils', 'BookNetwork', 'BookErrorCodes', 'TextContentDocument', 'NCCDocument', 'SMILDocument',
+    function( $q, $log, LYTUtils, BookNetwork, BookErrorCodes, TextContentDocument, NCCDocument, SMILDocument ) {
       const getDiscInfo = (obj, resources) => {
         const discinfo = new TextContentDocument(obj.localUri, resources);
 
@@ -126,6 +126,7 @@ angular.module( 'lyt3App' )
                 var path = uri.match( /https?:\/\/[^\/]+(.+)/ )[ 1 ];
 
                 this.resources[ localUri ] = {
+                  localUri: localUri,
                   url: origin + path,
                   document: null
                 };
@@ -297,7 +298,8 @@ angular.module( 'lyt3App' )
         localUri = URI(localUri).absoluteTo(this.nccDocument.localUri).toString();
         var deferred = $q.defer( );
         if ( !( localUri in this.resources ) ) {
-          return deferred.reject( );
+          deferred.reject( );
+          return deferred.promise;
         }
 
         var smil = this.resources[ localUri ];
@@ -313,6 +315,7 @@ angular.module( 'lyt3App' )
             smil.document = null;
             deferred.reject( error );
           } );
+
         return deferred.promise;
       };
 
@@ -808,15 +811,15 @@ angular.module( 'lyt3App' )
 
           book.issue( )
             .then( function( ) {
-              book.loadResources( multiCallback )
+              return book.loadResources( multiCallback )
                 .then( function( ) {
-                  book.loadBookmarks( )
+                  return book.loadBookmarks( )
                     .then( function( ) {
-                      book.loadNCC( )
+                      return book.loadNCC( )
                         .then( function( ) {
-                          book.getStructure( )
+                          return book.getStructure( )
                             .then( function( ) {
-                              deferred.resolve( book );
+                              return deferred.resolve( book );
                             } )
                             .catch( reject );
                         } )

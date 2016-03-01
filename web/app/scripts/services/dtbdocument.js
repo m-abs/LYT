@@ -251,7 +251,7 @@ angular.module( 'lyt3App' )
           // If all else fails, give up
           $log.error( 'DTB: Failed to get ' + this.url + ' (status: ' + status + ')', arguments );
           deferred.reject( status );
-        };
+        }.bind(this);
 
         var resolve = function( ) {
           if ( this.source ) {
