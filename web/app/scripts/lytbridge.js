@@ -1,24 +1,24 @@
 /*global $ */
-( function( ) {
+(function() {
   'use strict';
 
-  if ( window.lytBridge ) {
+  if (window.lytBridge) {
     // Has already been created by the native layer
     return;
   }
 
-  if ( /(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/i.test( navigator.userAgent ) ) {
-    ( function( ) {
+  if (/(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/i.test(navigator.userAgent)) {
+    (function() {
       // Create iframe for signaling iOS-nativeglue
       var iframe;
-      $( function( ) {
-        iframe = $( '<iframe src="about:blank;"></iframe>' )
-          .appendTo( document.body ).css( {
+      $(function() {
+        iframe = $('<iframe src="about:blank;"></iframe>')
+          .appendTo(document.body).css({
             position: 'absolute',
             top: -10000,
             left: -10000
-          } );
-      } );
+          });
+      });
 
       window.lytBridge = {
         _queue: [],
@@ -27,8 +27,8 @@
         _sendCommand: function(commandName, payloadArray) {
           console.log(commandName, payloadArray);
           this._queue.push([commandName, payloadArray]);
-          if ( iframe ) {
-            iframe.attr( 'src', 'nota://signal?r=' + Math.random( ) );
+          if (iframe) {
+            iframe.attr('src', 'nota://signal?r=' + Math.random());
           } else {
             window.open('nota://signal');
           }
@@ -53,7 +53,7 @@
 
         play: function(bookId, offset) {
           var position = offset;
-          if ( position === undefined ) {
+          if (position === undefined) {
             position = -1;
           }
           this._sendCommand('play', [bookId, position]);
@@ -63,72 +63,72 @@
           this._sendCommand('stop', []);
         },
 
-        cacheBook: function( bookId ) {
+        cacheBook: function(bookId) {
           this._sendCommand('cacheBook', [bookId]);
         },
 
-        cancelBookCaching: function( bookId ) {
+        cancelBookCaching: function(bookId) {
           this._sendCommand('cancelBookCaching', [bookId]);
         },
 
-        clearBookCache: function( bookId ) {
+        clearBookCache: function(bookId) {
           this._sendCommand('clearBookCache', [bookId]);
         }
       };
-    })( );
+    })();
   } else {
-    ( function( ) {
+    (function() {
       /**
        * Dummy implementation of the lytBrigde object
        * API defined at https://github.com/Notalib/LYT/wiki/LYT3---POC
        **/
 
-      var getStoredVar = function( key ) {
-        var res = window.localStorage.getItem( 'lydbridge:' + key );
-        if ( res ) {
-          return JSON.parse( res ) || {};
+      var getStoredVar = function(key) {
+        var res = window.localStorage.getItem('lydbridge:' + key);
+        if (res) {
+          return JSON.parse(res) || {};
         }
 
         return {};
       };
 
-      var storeVar = function( key, obj ) {
-        window.localStorage.setItem( 'lydbridge:' + key, JSON.stringify( obj ) );
+      var storeVar = function(key, obj) {
+        window.localStorage.setItem('lydbridge:' + key, JSON.stringify(obj));
       };
 
       var currentBook;
 
-      var audioHandler = ( function( ) {
-          var audio = document.createElement( 'AUDIO' );
-          var $audio = $( audio );
+      var audioHandler = (function() {
+          var audio = document.createElement('AUDIO');
+          var $audio = $(audio);
           var currentPlaylistItem;
           $audio
-            .on( 'timeupdate', function( ) {
-              if ( audio.paused ) {
-                console.log( 'lytBrige: timeupdate: audio is paused, do nothing' );
+            .on('timeupdate', function() {
+              if (audio.paused) {
+                console.log('lytBrige: timeupdate: audio is paused, do nothing');
                 return;
               }
 
-              if ( !currentBook ) {
-                console.log( 'lytBrige: timeupdate: no currentBook' );
-                audioHandler.stop( );
+              if (!currentBook) {
+                console.log('lytBrige: timeupdate: no currentBook');
+                audioHandler.stop();
                 return;
               }
 
               var bookId = currentBook.id;
 
-              if ( !booksOffset[ bookId ] ) {
-                booksOffset[ bookId ] = 0;
+              if (!booksOffset[bookId]) {
+                booksOffset[bookId] = 0;
               }
 
-              if ( !currentPlaylistItem ) {
-                console.log( 'lytBrige: timeupdate: no currentPlaylistItem' );
+              if (!currentPlaylistItem) {
+                console.log('lytBrige: timeupdate: no currentPlaylistItem');
 
-                audioHandler.stop( );
+                audioHandler.stop();
                 return;
               }
 
-              var offset = currentPlaylistItem.bookOffset + audio.currentTime -  currentPlaylistItem.start;
+              var offset = currentPlaylistItem.bookOffset + audio.currentTime - currentPlaylistItem.start;
               /*
               console.log( 'lytBrige: timeupdate', {
                 bookOffset: Number(offset).toFixed(2),
@@ -139,74 +139,74 @@
               } );
               */
 
-              if ( audio.currentTime >= currentPlaylistItem.end ) {
-                var tmpItem = currentBook.playlist[ currentPlaylistItem.idx + 1 ];
-                if ( tmpItem ) {
+              if (audio.currentTime >= currentPlaylistItem.end) {
+                var tmpItem = currentBook.playlist[currentPlaylistItem.idx + 1];
+                if (tmpItem) {
                   offset = tmpItem.bookOffset;
-                  console.log( 'lytBrige: timeupdate: next playlist item' );
-                  audioHandler.play( tmpItem );
+                  console.log('lytBrige: timeupdate: next playlist item');
+                  audioHandler.play(tmpItem);
                 } else {
-                  console.log( 'lytBrige: timeupdate: end of book' );
+                  console.log('lytBrige: timeupdate: end of book');
                   offset = currentBook.duration;
                 }
               }
 
-              booksOffset[ bookId ] = Math.min( offset, currentBook.duration );
-              window.lytHandleEvent( 'play-time-update', bookId, offset );
-              if ( booksOffset[ bookId ] >= currentBook.duration ) {
-                window.lytHandleEvent( 'play-end', bookId );
+              booksOffset[bookId] = Math.min(offset, currentBook.duration);
+              window.lytHandleEvent('play-time-update', bookId, offset);
+              if (booksOffset[bookId] >= currentBook.duration) {
+                window.lytHandleEvent('play-end', bookId);
               }
 
-              storeVar( 'booksOffset', booksOffset );
-            } )
-            .on( 'ended', function( ) {
-              if ( !currentBook ) {
-                console.log( 'lytBrige: ended: no currentBook' );
-                audioHandler.stop( );
+              storeVar('booksOffset', booksOffset);
+            })
+            .on('ended', function() {
+              if (!currentBook) {
+                console.log('lytBrige: ended: no currentBook');
+                audioHandler.stop();
                 return;
               }
 
               var bookId = currentBook.id;
 
-              if ( !booksOffset[ bookId ] ) {
-                booksOffset[ bookId ] = 0;
+              if (!booksOffset[bookId]) {
+                booksOffset[bookId] = 0;
               }
 
-              if ( !currentPlaylistItem ) {
-                audioHandler.stop( );
+              if (!currentPlaylistItem) {
+                audioHandler.stop();
                 return;
               }
 
-              var tmpItem = currentBook.playlist[ currentPlaylistItem.idx + 1 ];
-              if ( tmpItem ) {
-                console.log( 'lytBrige: ended: next playlist item' );
-                audioHandler.play( tmpItem );
+              var tmpItem = currentBook.playlist[currentPlaylistItem.idx + 1];
+              if (tmpItem) {
+                console.log('lytBrige: ended: next playlist item');
+                audioHandler.play(tmpItem);
               } else {
-                console.log( 'lytBrige: ended: book ended' );
-                audioHandler.stop( );
+                console.log('lytBrige: ended: book ended');
+                audioHandler.stop();
                 return;
               }
-            } );
+            });
 
           return {
-            play: function( playlistItem, offset ) {
+            play: function(playlistItem, offset) {
               currentPlaylistItem = playlistItem;
               audio.currentTime = offset !== undefined ? offset : playlistItem.start;
               audio.src = playlistItem.url;
-              audio.play( );
+              audio.play();
             },
-            stop: function( ) {
+            stop: function() {
               audio.pause();
-              window.lytHandleEvent( 'play-stop' );
+              window.lytHandleEvent('play-stop');
             }
           };
-        } )( );
+        })();
 
-      var getPlaylistItemFromOffset = function( offset ) {
-        if ( currentBook ) {
-          return currentBook.playlist.filter( function( item ) {
-            return item.bookOffset <= offset && offset <= ( item.bookOffset + item.end - item.start );
-          } ).pop();
+      var getPlaylistItemFromOffset = function(offset) {
+        if (currentBook) {
+          return currentBook.playlist.filter(function(item) {
+            return item.bookOffset <= offset && offset <= (item.bookOffset + item.end - item.start);
+          }).pop();
         }
       };
 
@@ -224,46 +224,46 @@
       //     title: <title>
       //   } ]
       // }
-      var books = getStoredVar( 'books' );
+      var books = getStoredVar('books');
 
       // List of cached books
       // id => true
-      var cachedBooks = getStoredVar( 'cachedBooks' );
+      var cachedBooks = getStoredVar('cachedBooks');
 
       // Book offset
-      var booksOffset = getStoredVar( 'booksOffset' );
+      var booksOffset = getStoredVar('booksOffset');
 
       window.lytBridge = {
         // Add the bookdata
-        setBook: function( bookData ) {
-          if ( !bookData ) {
+        setBook: function(bookData) {
+          if (!bookData) {
             return;
           }
 
-          bookData = JSON.parse( bookData );
-          if ( bookData && bookData.id ) {
+          bookData = JSON.parse(bookData);
+          if (bookData && bookData.id) {
             bookData.duration = bookData.playlist
-              .reduce( function( res, item, idx ) {
+              .reduce(function(res, item, idx) {
                 item.bookOffset = res;
                 item.idx = idx;
-                res += ( item.end - item.start );
+                res += (item.end - item.start);
                 return res;
-              }, 0 );
+              }, 0);
 
-            books[ bookData.id ] = bookData;
+            books[bookData.id] = bookData;
           }
 
-          storeVar( 'books', books );
+          storeVar('books', books);
         },
         // Remove book from book list
-        clearBook: function( bookId ) {
-          delete books[ bookId ];
-          delete cachedBooks[ bookId ];
-          delete booksOffset[ bookId ];
+        clearBook: function(bookId) {
+          delete books[bookId];
+          delete cachedBooks[bookId];
+          delete booksOffset[bookId];
 
-          storeVar( 'books', books );
-          storeVar( 'cachedBooks', cachedBooks );
-          storeVar( 'booksOffset', booksOffset );
+          storeVar('books', books);
+          storeVar('cachedBooks', cachedBooks);
+          storeVar('booksOffset', booksOffset);
         },
         // Return a list of all known books:
         // [
@@ -273,84 +273,84 @@
         //    downloaded: <cachedBooks[<ID>]>
         //  }
         // ]
-        getBooks: function( ) {
+        getBooks: function() {
           return Object.keys(books)
-            .map( function( bookId ) {
+            .map(function(bookId) {
               return {
                 id: bookId,
-                offset: Math.max( booksOffset[ bookId ] || 0, 0 ),
-                downloaded: !!cachedBooks[ bookId ]
+                offset: Math.max(booksOffset[bookId] || 0, 0),
+                downloaded: !!cachedBooks[bookId]
               };
-            } );
+            });
         },
         // Start playback, take bookId and offset.
         // If offset is undefined use the book's last known offset
-        play: function( bookId, offset ) {
-          if ( !books[ bookId ] ) {
+        play: function(bookId, offset) {
+          if (!books[bookId]) {
             return;
           }
 
-          currentBook = books[ bookId ];
+          currentBook = books[bookId];
 
-          if ( offset === undefined ) {
-            offset = booksOffset[ bookId ] || 0;
+          if (offset === undefined) {
+            offset = booksOffset[bookId] || 0;
           }
 
-          var tmpItem = getPlaylistItemFromOffset( offset );
-          if ( tmpItem ) {
-            audioHandler.play( tmpItem, offset - tmpItem.bookOffset );
+          var tmpItem = getPlaylistItemFromOffset(offset);
+          if (tmpItem) {
+            audioHandler.play(tmpItem, offset - tmpItem.bookOffset);
           }
         },
         stop: function() {
-          audioHandler.stop( );
+          audioHandler.stop();
         },
-        cacheBook: function( bookId ) {
-          if ( !cachedBooks[ bookId ] ) {
-            cachedBooks[ bookId ] = 0;
+        cacheBook: function(bookId) {
+          if (!cachedBooks[bookId]) {
+            cachedBooks[bookId] = 0;
           }
 
-          storeVar( 'cachedBooks', cachedBooks );
+          storeVar('cachedBooks', cachedBooks);
           var delay = 100;
           var wantedDuration = 30000;
           var numIteration = wantedDuration / delay;
           var increasePerIteration = numIteration / 100;
-          var downloadInterval = setInterval( function( ) {
-            if ( cachedBooks[ bookId ] === undefined ) {
-              clearInterval( downloadInterval );
+          var downloadInterval = setInterval(function() {
+            if (cachedBooks[bookId] === undefined) {
+              clearInterval(downloadInterval);
               return;
             }
 
-            cachedBooks[ bookId ] += increasePerIteration;
-            if ( cachedBooks[ bookId ] >= 100 ) {
-              setTimeout( function( ) {
-                window.lytHandleEvent( 'download-completed', bookId, ( new Date( ) ) / 1000 );
-              }, delay );
-              clearInterval( downloadInterval );
+            cachedBooks[bookId] += increasePerIteration;
+            if (cachedBooks[bookId] >= 100) {
+              setTimeout(function() {
+                window.lytHandleEvent('download-completed', bookId, (new Date()) / 1000);
+              }, delay);
+              clearInterval(downloadInterval);
 
-              cachedBooks[ bookId ] = 100;
+              cachedBooks[bookId] = 100;
             }
-            window.lytHandleEvent( 'download-progress', bookId, cachedBooks[ bookId ] );
+            window.lytHandleEvent('download-progress', bookId, cachedBooks[bookId]);
 
-            storeVar( 'cachedBooks', cachedBooks );
-          }, 100 );
+            storeVar('cachedBooks', cachedBooks);
+          }, 100);
         },
-        cancelBookCaching: function( bookId ) {
-          window.lytBridge.clearBookCache( bookId );
+        cancelBookCaching: function(bookId) {
+          window.lytBridge.clearBookCache(bookId);
 
-          window.lytHandleEvent( 'download-cancelled', bookId );
+          window.lytHandleEvent('download-cancelled', bookId);
         },
-        clearBookCache: function( bookId ) {
-          delete cachedBooks[ bookId ];
+        clearBookCache: function(bookId) {
+          delete cachedBooks[bookId];
 
-          storeVar( 'cachedBooks', cachedBooks );
+          storeVar('cachedBooks', cachedBooks);
         }
       };
 
-      setTimeout( function( ) {
-        Object.keys(cachedBooks).forEach( function( bookid ) {
-          window.lytBridge.cacheBook( bookid );
-        } );
-      }, 1000 );
+      setTimeout(function() {
+        Object.keys(cachedBooks).forEach(function(bookid) {
+          window.lytBridge.cacheBook(bookid);
+        });
+      }, 1000);
     })();
   }
-} )();
+})();
