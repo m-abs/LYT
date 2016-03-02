@@ -4,10 +4,10 @@
 angular.module( 'lyt3App' )
   .factory( 'Book', [ '$q', '$log', 'LYTUtils', 'BookNetwork', 'BookErrorCodes', 'TextContentDocument', 'NCCDocument', 'SMILDocument',
     function( $q, $log, LYTUtils, BookNetwork, BookErrorCodes, TextContentDocument, NCCDocument, SMILDocument ) {
-      const getDiscInfo = (obj, resources) => {
+      const getDiscInfo = function(obj, resources) {
         const discinfo = new TextContentDocument(obj.localUri, resources);
 
-        return discinfo.then( () => {
+        return discinfo.then( function() {
           const source = discinfo.source;
           const parts = jQuery('body a', source).map(function() {
             return {
@@ -145,11 +145,11 @@ angular.module( 'lyt3App' )
             if (discinfo && nccs.length > 1) {
               getDiscInfo(discinfo, this.resources)
                 .then(multiCallback)
-                .then((part) => {
+                .then(function(part) {
                   // log.message 'User selected which volume to play', part
                   this.nccData = this.resources[part.localUri];
                   deferred.resolve( );
-                });
+                }.bind(this));
             } else if ( nccs.length === 1 ) {
               this.nccData = nccs[0];
               deferred.resolve( );

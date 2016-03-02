@@ -49,7 +49,9 @@ angular.module( 'lyt3App' )
         this.audio = null;
         if (data.audio && data.audio.src) {
           const src = data.audio.src.toLowerCase();
-          const localUri = [dirname, src].filter((val) => !!val).join('/');
+          const localUri = [dirname, src].filter(function(val) {
+            return !!val;
+          }).join('/');
           this.audio = resources[localUri].url;
         }
 
