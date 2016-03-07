@@ -158,7 +158,6 @@ angular.module('lyt3App')
             return Book.load( bookId );
           } )
             .then( function( book ) {
-              deferred.resolve( book );
               BookService.currentBook = book;
 
               NativeGlue.getBooks( )
@@ -169,6 +168,8 @@ angular.module('lyt3App')
                     return true;
                   }
                 } );
+
+              deferred.resolve( book );
             } )
             .catch( function( ) {
               deferred.reject( );
@@ -203,20 +204,22 @@ angular.module('lyt3App')
     };
 
     $rootScope.$on( 'play-time-update', function( $currentScope, bookId, offset ) {
+      console.log('play-time-update:' + bookId);
       if ( !currentBook || currentBook.id !== bookId ) {
-        if ( $location.path( ).indexOf( 'book-player' ) > -1 ) {
+        if ( true || $location.path( ).indexOf( 'book-player' ) > -1 ) {
           var bookPath = '/book-player/' + bookId;
           $location.path( bookPath );
-          BookService.playing = true;
           $log.info( 'BookService: play-time-update: location is book-player but different', bookId, offset );
-          findCurrentSegment( bookId, offset );
+          findCurrentSegment( bookId, offset || 0 );
         } else {
           $log.info( 'BookService: play-time-update: location different from book-player', bookId, offset );
           BookService.loadBook( bookId )
             .then( function( book ) {
-              book.currentPosition = offset;
+              book.currentPosition = offset || 0;
+              findCurrentSegment( bookId, offset || 0 );
+
+              BookService.play();
               BookService.playing = true;
-              findCurrentSegment( bookId, offset );
             } );
         }
       } else {

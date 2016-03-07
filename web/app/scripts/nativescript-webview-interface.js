@@ -3,23 +3,23 @@
  */
 var NSWebViewinterface = (function () {
     function NSWebViewinterface() {
-        
+
         /**
          * Mapping of native eventName and its handler in webView
          */
         this.eventListenerMap = {};
-        
+
         /**
          * Mapping of JS Call responseId and result for iOS
          */
         this._iosResponseMap = {};
-        
+
         /**
          * Counter of iOS JS Call responseId
          */
         this._iosCntResponseId = 0;
     }
-    
+
     /**
      * Handles events/commands emitted by android/ios. This function is called from nativescript.
      * @param   {string}    eventName - Native event/command name

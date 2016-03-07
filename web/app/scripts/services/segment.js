@@ -44,12 +44,12 @@ angular.module( 'lyt3App' )
 
         // If this is a audio segment, we need to find the proper localURI for the
         // audio-clip. We do this by basing the URL on the base directory of the smil
-        const resources = document.book.resources;
-        const dirname = URI(document.localUri).directory();
+        var resources = document.book.resources;
+        var dirname = URI(document.localUri).directory();
         this.audio = null;
         if (data.audio && data.audio.src) {
-          const src = data.audio.src.toLowerCase();
-          const localUri = [dirname, src].filter(function(val) {
+          var src = data.audio.src.toLowerCase();
+          var localUri = [dirname, src].filter(function(val) {
             return !!val;
           }).join('/');
           this.audio = resources[localUri].url;

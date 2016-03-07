@@ -17,8 +17,8 @@ angular.module( 'lyt3App' )
             var url = item.attr( 'data-src' ).replace( /^\//, '' );
 
             // We need to add the relative base of the ncc
-            const imageLocalUri = URI(url).absoluteTo(localUri).toString();
-            const newUrl = resources[imageLocalUri] ? resources[imageLocalUri].url : null;
+            var imageLocalUri = URI(url).absoluteTo(localUri).toString();
+            var newUrl = resources[imageLocalUri] ? resources[imageLocalUri].url : null;
 
             item.data( 'resolved', 'yes' );
             if ( isCartoon ) {
@@ -44,7 +44,7 @@ angular.module( 'lyt3App' )
 
       // Public prototype function:
       function TextContentDocument( localUri, resources, callback ) {
-        const url = resources[localUri].url;
+        var url = resources[localUri].url;
         DtbDocument.call( this, url, function( ) {
           resolveURLs( this.source, localUri, resources, this.isCartoon( ) );
 

@@ -4,12 +4,12 @@
 angular.module( 'lyt3App' )
   .factory( 'Book', [ '$q', '$log', 'LYTUtils', 'BookNetwork', 'BookErrorCodes', 'TextContentDocument', 'NCCDocument', 'SMILDocument',
     function( $q, $log, LYTUtils, BookNetwork, BookErrorCodes, TextContentDocument, NCCDocument, SMILDocument ) {
-      const getDiscInfo = function(obj, resources) {
-        const discinfo = new TextContentDocument(obj.localUri, resources);
+      var getDiscInfo = function(obj, resources) {
+        var discinfo = new TextContentDocument(obj.localUri, resources);
 
         return discinfo.then( function() {
-          const source = discinfo.source;
-          const parts = jQuery('body a', source).map(function() {
+          var source = discinfo.source;
+          var parts = jQuery('body a', source).map(function() {
             return {
               name: this.textContent,
               localUri: URI(this.getAttribute('href')).normalize().toString()
@@ -106,8 +106,8 @@ angular.module( 'lyt3App' )
 
         BookNetwork.getResources( this.id )
           .then( function( resources ) {
-            const nccs = [];
-            let discinfo = null;
+            var nccs = [];
+            var discinfo = null;
             Object.keys( resources )
               .forEach( function( localUri ) {
                 var uri = resources[ localUri ];
@@ -451,7 +451,7 @@ angular.module( 'lyt3App' )
 
         this.findSegmentFromOffset( currentPosition )
           .then( function( segment ) {
-            const section = this.getSectionBySegment( segment );
+            var section = this.getSectionBySegment( segment );
 
             this.lastmark = segment.bookmark( currentPosition );
             if (section.ref) {
