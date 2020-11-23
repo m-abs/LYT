@@ -133,7 +133,7 @@ class LYT.player.command.play extends LYT.player.command
         log.message "Command play: Stop -> set playbackRate -> resume"
         @audio.pause()
         @audio.playbackRate = @playbackRate
-        @audio.play()
+        void @audio.play()
         return
 
     if @browser.IE11

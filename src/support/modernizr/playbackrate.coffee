@@ -62,7 +62,7 @@ playbackLiveTest = (audio) ->
   , (duration + 1) * 1000
   )
 
-  audio.play()
+  void audio.play()
 
 playbackTest = ->
   log.message "Tests: Playback test (playbackrate) is running"

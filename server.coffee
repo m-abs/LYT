@@ -64,7 +64,7 @@ exec 'cake -dt app', ->
   if not argv.silence
     console.log 'Fininshed build'
 
-server = app.listen argv.port, ->
+server = app.listen argv.port, '0.0.0.0', ->
   if not argv.silence
     console.log 'Listening on port %d', server.address().port
 
